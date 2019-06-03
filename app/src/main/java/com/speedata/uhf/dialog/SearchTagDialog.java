@@ -160,6 +160,8 @@ public class SearchTagDialog extends Dialog implements
                         Toast.makeText(cont, "There is a problem in exporting! Please try again", Toast.LENGTH_SHORT).show();
                     }
                     break;
+                default:
+                    break;
             }
 
         }
@@ -195,7 +197,7 @@ public class SearchTagDialog extends Dialog implements
                 this.setCancelable(false);
                 scant = 0;
                 //取消掩码
-                iuhfService.selectCard(1, "", false);
+//                iuhfService.selectCard(1, "", false);
                 EventBus.getDefault().post(new MsgEvent("CancelSelectCard", ""));
                 iuhfService.inventoryStart();
                 Action.setText(R.string.Stop_Search_Btn);
@@ -304,7 +306,7 @@ public class SearchTagDialog extends Dialog implements
         int res = iuhfService.selectCard(1, epcStr, true);
         if (res == 0) {
             EventBus.getDefault().post(new MsgEvent("set_current_tag_epc", epcStr));
-            dismiss();
+//            dismiss();
         } else {
             Status.setText(R.string.Status_Select_Card_Faild);
         }

@@ -6,6 +6,8 @@ import android.os.Handler;
 import com.speedata.libuhf.interfaces.OnSpdInventoryListener;
 import com.speedata.libuhf.interfaces.OnSpdReadListener;
 import com.speedata.libuhf.interfaces.OnSpdWriteListener;
+import com.uhf.structures.InventoryData;
+import com.uhf.structures.KrSm7Data;
 import com.uhf.structures.SelectCriteria;
 
 /**
@@ -29,6 +31,7 @@ public interface IUHFService {
     public static final int LOW_POWER_MODE = 2;
     public static final int USER_MODE = 3;
     public static final String SERIALPORT = "/dev/ttyMT2";
+    public static final String SERIALPORT_SD60 = "/dev/ttyMT0";
     public static final String POWERCTL = "/sys/class/misc/mtgpio/pin";
 
     //*************************************************共用接口*********************************************************
@@ -52,6 +55,7 @@ public interface IUHFService {
      * 开始盘点
      */
     public void inventoryStart();
+
 
     /**
      * 停止盘点
@@ -106,23 +110,26 @@ public interface IUHFService {
 
     /**
      * 锁卡
+     *
      * @param type
      * @param area
      * @param passwd
      * @return
      */
-    public int setLock(int type, int area, String passwd) ;
+    public int setLock(int type, int area, String passwd);
 
 
     public int setQueryTagGroup(int selected, int session, int target);
+
     public int getQueryTagGroup();
 
 
     /**
      * 掩码
-     * @param area 区域
-     * @param addr 起始地址 bit
-     * @param length 长度 bit
+     *
+     * @param area    区域
+     * @param addr    起始地址 bit
+     * @param length  长度 bit
      * @param content 掩码内容
      * @return
      */
@@ -130,15 +137,76 @@ public interface IUHFService {
 
     /**
      * 取消选卡
+     *
      * @return
      */
     public int cancelMask();
 
     /**
      * 获取掩码信息
+     *
      * @return
      */
     public SelectCriteria getMask();
+
+    //*****************坤瑞sm7接口************
+
+
+    int krSm7Inventory(InventoryData inventoryData);
+
+    /**
+     * @param length      长度
+     * @param raddr       地址
+     * @param area        要操作的区域
+     * @param content     写入的内容
+     * @param resultBytes 返回结果
+     * @return
+     */
+    /**
+     * 坤锐sm7blocwrite
+     *
+     * @param length  长度
+     * @param addr    起始地址
+     * @param area    要操作的区
+     * @param pwd     标签密码
+     * @param content 写入的内容
+     * @return 转态码
+     */
+    int krSm7Blockwrite(int length, int addr, int area, byte[] pwd, byte[] content);
+
+    /**
+     * 坤锐正常写
+     *
+     * @param length  长度
+     * @param addr    起始地址
+     * @param area    要操作的区
+     * @param pwd     标签密码
+     * @param content 写入的内容
+     * @return
+     */
+    int krSm7Write(int length, int addr, int area, byte[] pwd, byte[] content);
+
+    /**
+     * 坤锐读取
+     *
+     * @param length    长度
+     * @param addr      起始地址
+     * @param area      要操作的区
+     * @param pwd       标签密码
+     * @param krSm7Data 读取内容
+     * @return
+     */
+    int krSm7Read(int length, int addr, int area, byte[] pwd, KrSm7Data krSm7Data);
+
+    /**
+     * 坤锐关闭
+     *
+     * @return
+     */
+    int krSm7End();
+
+    //****************************
+
 
     //********************************************老版接口（不再维护）***************************************************
 

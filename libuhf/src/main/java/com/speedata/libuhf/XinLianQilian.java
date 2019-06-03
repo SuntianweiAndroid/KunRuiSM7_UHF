@@ -23,6 +23,8 @@ import com.speedata.libuhf.utils.ReadBean;
 import com.speedata.libuhf.utils.StringUtils;
 import com.uhf.api.cls.ErrInfo;
 import com.uhf.api.cls.Reader;
+import com.uhf.structures.InventoryData;
+import com.uhf.structures.KrSm7Data;
 import com.uhf.structures.SelectCriteria;
 
 import java.io.BufferedReader;
@@ -61,6 +63,7 @@ public class XinLianQilian implements IUHFService {
 
 
     //初始化模块
+    @Override
     public int openDev() {
         Log.d(TAG, "openDev: start");
         if (ConfigUtils.isConfigFileExists() && !CommonUtils.subDeviceType().contains("55")) {
@@ -198,6 +201,7 @@ public class XinLianQilian implements IUHFService {
     }
 
     //关闭模块
+    @Override
     public void closeDev() {
         Log.d(TAG, "closeDev: start");
         if (Mreader != null)
@@ -667,6 +671,31 @@ public class XinLianQilian implements IUHFService {
     @Override
     public SelectCriteria getMask() {
         return null;
+    }
+
+    @Override
+    public int krSm7Inventory(InventoryData inventoryData) {
+        return 0;
+    }
+
+    @Override
+    public int krSm7Blockwrite(int length, int addr, int area, byte[] pwd, byte[] content) {
+        return 0;
+    }
+
+    @Override
+    public int krSm7Write(int length, int addr, int area, byte[] pwd, byte[] content) {
+        return 0;
+    }
+
+    @Override
+    public int krSm7Read(int length, int addr, int area, byte[] pwd, KrSm7Data krSm7Data) {
+        return 0;
+    }
+
+    @Override
+    public int krSm7End() {
+        return 0;
     }
 
     //********************************************老版接口（不再维护）******************************************

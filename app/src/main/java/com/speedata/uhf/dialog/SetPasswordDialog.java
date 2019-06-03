@@ -1,5 +1,6 @@
 package com.speedata.uhf.dialog;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import com.speedata.libuhf.IUHFService;
 import com.speedata.libuhf.bean.SpdWriteData;
 import com.speedata.libuhf.interfaces.OnSpdWriteListener;
+import com.speedata.libuhf.utils.DataConversionUtils;
 import com.speedata.libuhf.utils.StringUtils;
 import com.speedata.uhf.R;
 
@@ -116,9 +118,25 @@ public class SetPasswordDialog extends Dialog implements
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    int setPassword = iuhfService.setPassword(which, cur_pass, new_pass);
-                    if (setPassword != 0) {
-                        handler.sendMessage(handler.obtainMessage(1,"参数不正确"));
+                    if (model.equals("krsm7")) {
+                        int setPassword=-1;
+                        if (which == 0) {
+                             setPassword = iuhfService.krSm7Write(2, 0, 0, DataConversionUtils.HexString2Bytes(cur_pass), DataConversionUtils.HexString2Bytes(new_pass));
+
+                        } else {
+                             setPassword = iuhfService.krSm7Write(2, 2, 0, DataConversionUtils.HexString2Bytes(cur_pass), DataConversionUtils.HexString2Bytes(new_pass));
+                        }
+                        if (setPassword != 0) {
+                            handler.sendMessage(handler.obtainMessage(1, "WriteError:" + setPassword));
+                        } else {
+                            handler.sendMessage(handler.obtainMessage(1, "WriteSuccess:"));
+
+                        }
+                    } else {
+                        int setPassword = iuhfService.setPassword(which, cur_pass, new_pass);
+                        if (setPassword != 0) {
+                            handler.sendMessage(handler.obtainMessage(1, "参数不正确"));
+                        }
                     }
                 }
             }).start();
@@ -127,6 +145,7 @@ public class SetPasswordDialog extends Dialog implements
         }
     }
 
+    @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {

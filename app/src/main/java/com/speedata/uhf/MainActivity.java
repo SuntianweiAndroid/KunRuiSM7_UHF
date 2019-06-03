@@ -6,19 +6,23 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.speedata.libuhf.IUHFService;
 import com.speedata.libuhf.UHFManager;
 import com.speedata.libuhf.utils.CommonUtils;
+import com.speedata.libuhf.utils.DataConversionUtils;
 import com.speedata.libuhf.utils.SharedXmlUtil;
 import com.speedata.uhf.dialog.InvSetDialog;
 import com.speedata.uhf.dialog.LockTagDialog;
@@ -27,10 +31,15 @@ import com.speedata.uhf.dialog.SearchTagDialog;
 import com.speedata.uhf.dialog.SetEPCDialog;
 import com.speedata.uhf.dialog.SetModuleDialog;
 import com.speedata.uhf.dialog.SetPasswordDialog;
+import com.speedata.uhf.dialog.Sm7CheckDialog;
 import com.speedata.uhf.dialog.WriteTagDialog;
+import com.uhf.structures.InventoryData;
+import com.uhf.structures.KrSm7Data;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.io.UnsupportedEncodingException;
 
 public class MainActivity extends Activity implements OnClickListener {
     private static final String[] list = {"Reserved", "EPC", "TID", "USER"};
@@ -53,6 +62,9 @@ public class MainActivity extends Activity implements OnClickListener {
     private WakeLock wK = null;
     private int init_progress = 0;
     private String modle;
+    private String type = "";
+    private Button btnSm7Check;
+    private Switch aSwitch;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -225,7 +237,25 @@ public class MainActivity extends Activity implements OnClickListener {
         Set_Password.setEnabled(false);
         Lock_Tag.setEnabled(false);
         Area_Select.setEnabled(false);
-
+        aSwitch = (Switch) findViewById(R.id.switchs);
+        btnSm7Check = (Button) findViewById(R.id.btn_sm7_check);
+        btnSm7Check.setOnClickListener(this);
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    type = "krsm7";
+                    btnSm7Check.setVisibility(View.VISIBLE);
+                    Search_Tag.setVisibility(View.GONE);
+                    Log.i("tw", "onCheckedChanged: +true");
+                } else {
+                    Log.i("tw", "onCheckedChanged: false");
+                    type = "";
+                    btnSm7Check.setVisibility(View.GONE);
+                    Search_Tag.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
 
 
@@ -245,32 +275,50 @@ public class MainActivity extends Activity implements OnClickListener {
     public void onClick(View arg0) {
         // TODO Auto-generated method stub
         if (arg0 == Read_Tag) {
-            if (current_tag_epc == null) {
-                Status.setText(R.string.Status_No_Card_Select);
-                Toast.makeText(this, R.string.Status_No_Card_Select, Toast.LENGTH_SHORT).show();
-                return;
+            if (type.equals("krsm7")) {
+                //读卡
+                ReadTagDialog readTag = new ReadTagDialog(this, iuhfService
+                        , Area_Select.getSelectedItemPosition(), current_tag_epc, "krsm7");
+                readTag.setTitle(R.string.Item_Read);
+                readTag.show();
+            } else {
+                if (current_tag_epc == null) {
+                    Status.setText(R.string.Status_No_Card_Select);
+                    Toast.makeText(this, R.string.Status_No_Card_Select, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                //读卡
+                ReadTagDialog readTag = new ReadTagDialog(this, iuhfService
+                        , Area_Select.getSelectedItemPosition(), current_tag_epc, modle);
+                readTag.setTitle(R.string.Item_Read);
+                readTag.show();
             }
-            //读卡
-            ReadTagDialog readTag = new ReadTagDialog(this, iuhfService
-                    , Area_Select.getSelectedItemPosition(), current_tag_epc, modle);
-            readTag.setTitle(R.string.Item_Read);
-            readTag.show();
+
 
         } else if (arg0 == Write_Tag) {
-            if (current_tag_epc == null) {
-                Status.setText(R.string.Status_No_Card_Select);
-                Toast.makeText(this, R.string.Status_No_Card_Select, Toast.LENGTH_SHORT).show();
-                return;
+            if (type.equals("krsm7")) {
+                //写卡
+                WriteTagDialog writeTag = new WriteTagDialog(this, iuhfService,
+                        Area_Select.getSelectedItemPosition()
+                        , current_tag_epc, "krsm7");
+                writeTag.setTitle(R.string.Item_Write);
+                writeTag.show();
+            } else {
+
+                if (current_tag_epc == null) {
+                    Status.setText(R.string.Status_No_Card_Select);
+                    Toast.makeText(this, R.string.Status_No_Card_Select, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                //写卡
+                WriteTagDialog writeTag = new WriteTagDialog(this, iuhfService,
+                        Area_Select.getSelectedItemPosition()
+                        , current_tag_epc, modle);
+                writeTag.setTitle(R.string.Item_Write);
+                writeTag.show();
             }
-            //写卡
-            WriteTagDialog writeTag = new WriteTagDialog(this, iuhfService,
-                    Area_Select.getSelectedItemPosition()
-                    , current_tag_epc, modle);
-            writeTag.setTitle(R.string.Item_Write);
-            writeTag.show();
 
         } else if (arg0 == Search_Tag) {
-
             //盘点选卡
             SearchTagDialog searchTag = new SearchTagDialog(this, iuhfService, modle);
             searchTag.setTitle(R.string.Item_Choose);
@@ -283,16 +331,25 @@ public class MainActivity extends Activity implements OnClickListener {
             setDialog.show();
 
         } else if (arg0 == Set_Password) {
-            if (current_tag_epc == null) {
-                Status.setText(R.string.Status_No_Card_Select);
-                Toast.makeText(this, R.string.Status_No_Card_Select, Toast.LENGTH_SHORT).show();
-                return;
+            if (type.equals("krsm7")) {
+                //设置密码
+                SetPasswordDialog setPasswordDialog = new SetPasswordDialog(this
+                        , iuhfService, current_tag_epc, "krsm7");
+                setPasswordDialog.setTitle(R.string.SetPasswd_Btn);
+                setPasswordDialog.show();
+            } else {
+
+                if (current_tag_epc == null) {
+                    Status.setText(R.string.Status_No_Card_Select);
+                    Toast.makeText(this, R.string.Status_No_Card_Select, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                //设置密码
+                SetPasswordDialog setPasswordDialog = new SetPasswordDialog(this
+                        , iuhfService, current_tag_epc, modle);
+                setPasswordDialog.setTitle(R.string.SetPasswd_Btn);
+                setPasswordDialog.show();
             }
-            //设置密码
-            SetPasswordDialog setPasswordDialog = new SetPasswordDialog(this
-                    , iuhfService, current_tag_epc, modle);
-            setPasswordDialog.setTitle(R.string.SetPasswd_Btn);
-            setPasswordDialog.show();
         } else if (arg0 == Set_EPC) {
             if (current_tag_epc == null) {
                 Status.setText(R.string.Status_No_Card_Select);
@@ -319,8 +376,13 @@ public class MainActivity extends Activity implements OnClickListener {
             InvSetDialog invSetDialog = new InvSetDialog(this, iuhfService);
             invSetDialog.setTitle("Inv Set");
             invSetDialog.show();
+        } else if (arg0 == btnSm7Check) {
+            Sm7CheckDialog sm7CheckDialog = new Sm7CheckDialog(this, iuhfService, Area_Select.getSelectedItemPosition());
+            sm7CheckDialog.setTitle("坤锐SM7认证");
+            sm7CheckDialog.show();
         }
     }
+
 
     private long mkeyTime = 0;
 
@@ -345,6 +407,8 @@ public class MainActivity extends Activity implements OnClickListener {
                     }
                 }
                 return false;
+            default:
+                break;
         }
         return super.onKeyDown(keyCode, event);
     }

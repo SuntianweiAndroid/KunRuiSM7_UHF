@@ -8,10 +8,12 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.serialport.DeviceControl;
 import android.serialport.UHFDeviceControl;
 import android.serialport.SerialPortBackup;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.speedata.libuhf.utils.CommonUtils;
@@ -194,10 +196,24 @@ public class UHFManager {
                         powerOn(UHFDeviceControl.PowerType.MAIN_AND_EXPAND, 88, 7, 5);
                     } else if (readEm55.equals("48") || readEm55.equals("81")) {
                         powerOn(UHFDeviceControl.PowerType.MAIN_AND_EXPAND, 88, 6, 7);
+                    } else if (xinghao.equals("SD55L")) {
+                        powerOn(UHFDeviceControl.PowerType.MAIN, 128);
                     } else {
                         powerOn(UHFDeviceControl.PowerType.MAIN, 88);
                     }
 
+                } else if (xinghao.equals("SD60")) {
+
+//                        DeviceControl deviceControl = new DeviceControl(DeviceControl.PowerType.NEW_MAIN, 68);
+                    powerOn(UHFDeviceControl.PowerType.EXPAND, 9, 14);
+
+                } else if (Build.MODEL.equals("SD60RT")) {
+                    try {
+                        DeviceControl deviceControl = new DeviceControl(DeviceControl.PowerType.EXPAND, 9, 14);
+                        deviceControl.PowerOnDevice();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     powerOn(UHFDeviceControl.PowerType.MAIN, 94);
                 }
@@ -232,7 +248,12 @@ public class UHFManager {
         String factory = "";
         SerialPortBackup serialPort = new SerialPortBackup();
         try {
-            serialPort.OpenSerial("/dev/ttyMT2", 115200);
+            if (Build.MODEL.equals("SD60") || Build.MODEL.equals("SD60RT")) {
+                serialPort.OpenSerial("/dev/ttyMT0", 115200);
+            } else {
+                serialPort.OpenSerial("/dev/ttyMT2", 115200);
+
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,5 +1,6 @@
 package com.speedata.uhf.dialog;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
@@ -15,8 +16,10 @@ import android.widget.Toast;
 import com.speedata.libuhf.IUHFService;
 import com.speedata.libuhf.bean.SpdReadData;
 import com.speedata.libuhf.interfaces.OnSpdReadListener;
+import com.speedata.libuhf.utils.DataConversionUtils;
 import com.speedata.libuhf.utils.StringUtils;
 import com.speedata.uhf.R;
+import com.uhf.structures.KrSm7Data;
 
 /**
  * Created by 张明_ on 2016/12/28.
@@ -105,9 +108,20 @@ public class ReadTagDialog extends Dialog implements
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    int readArea = iuhfService.readArea(which_choose, addr, count, str_passwd);
-                    if (readArea != 0) {
-                        handler.sendMessage(handler.obtainMessage(1,"参数不正确"));
+                    if (model.equals("krsm7")) {
+                        KrSm7Data krSm7Data = new KrSm7Data();
+                        int readArea = iuhfService.krSm7Read(count, addr, which_choose,
+                                DataConversionUtils.HexString2Bytes(str_passwd), krSm7Data);
+                        if (readArea != 0) {
+                            handler.sendMessage(handler.obtainMessage(1, "ReadError:" + readArea));
+                        } else {
+                            handler.sendMessage(handler.obtainMessage(1, "ReadData:" + DataConversionUtils.byteArrayToString(krSm7Data.Sm7Data)));
+                        }
+                    } else {
+                        int readArea = iuhfService.readArea(which_choose, addr, count, str_passwd);
+                        if (readArea != 0) {
+                            handler.sendMessage(handler.obtainMessage(1, "参数不正确"));
+                        }
                     }
                 }
             }).start();
@@ -117,6 +131,7 @@ public class ReadTagDialog extends Dialog implements
         }
     }
 
+    @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
