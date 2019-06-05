@@ -253,7 +253,7 @@ public class XinLianQilian implements IUHFService {
      * 开始盘点
      */
     @Override
-    public void inventoryStart() {
+    public void inventoryStart(int inventoryFlag ) {
         inventory_start();
     }
 

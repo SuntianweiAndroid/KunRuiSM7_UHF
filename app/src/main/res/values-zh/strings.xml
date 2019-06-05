@@ -86,6 +86,7 @@
     <string name="view_rt">休息时间</string>
     <string name="btn_bk">返回</string>
     <string name="cb_beep">beep new</string>
+    <string name="checkbox_beep">是否掩码</string>
     <string name="text_null"></string>
     <string name="antenna_p">天线功率</string>
     <string name="spt">速度\n测试</string>

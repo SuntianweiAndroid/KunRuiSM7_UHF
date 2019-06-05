@@ -54,7 +54,7 @@ public interface IUHFService {
     /**
      * 开始盘点
      */
-    public void inventoryStart();
+    public void inventoryStart(int inventoryFlag);
 
 
     /**

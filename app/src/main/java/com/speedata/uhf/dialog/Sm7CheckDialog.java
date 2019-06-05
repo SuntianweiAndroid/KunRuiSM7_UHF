@@ -158,19 +158,19 @@ public class Sm7CheckDialog extends Dialog implements
 //                    EventBus.getDefault().post(new ResultBeen(1, Status.toString(), epcs));
 //                }
 //            } else {
-                epcs = "";
-                //重新inventory+selectCard
-               int result = iuhfService.krSm7Inventory(inventoryData);
-                epcs = DataConversionUtils.byteArrayToString(inventoryData.EPC_Data);
-                EPC.setText(epcs);
-                Status.setText("EPC:" + epcs);
-                if (result == 0) {
-                    sm7check(pwd, krsm7pwd, krsm7action);
-                    // 判断sm7check的值，error-验证失败  true-验证成功。
-                } else {
-                    Log.e("tw", "盘点失败");
-                    Status.append("\n盘点失败请重试");
-                }
+        epcs = "";
+        //重新inventory+selectCard
+        int result = iuhfService.krSm7Inventory(inventoryData);
+        if (result == 0) {
+            epcs = DataConversionUtils.byteArrayToString(inventoryData.EPC_Data);
+            sm7check(pwd, krsm7pwd, krsm7action);
+            EPC.setText(epcs);
+            Status.setText("EPC:" + epcs);
+            // 判断sm7check的值，error-验证失败  true-验证成功。
+        } else {
+            Log.e("tw", "盘点失败");
+            Status.append("\n盘点失败请重试");
+        }
 //            }
 //        } else {
 //            Log.e("tw", "盘点失败");

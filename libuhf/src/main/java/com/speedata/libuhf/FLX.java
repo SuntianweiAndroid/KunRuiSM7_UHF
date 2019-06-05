@@ -724,13 +724,12 @@ public class FLX implements IUHFService, OnInventoryListener, OnReadWriteListene
 
     /**
      * 开始盘点
+     * * @param inventoryFlag  是否为掩码 掩码1 默认0
      */
-
     @Override
+    public void inventoryStart(int inventoryFlag) {
 
-    public void inventoryStart() {
-
-        getLinkage().startInventory(0);
+        getLinkage().startInventory(inventoryFlag);
 
     }
 
@@ -1840,29 +1839,29 @@ public class FLX implements IUHFService, OnInventoryListener, OnReadWriteListene
             selectCriteria.status = 1;
 
         } else {
-
-            selectCriteria.status = 0;
+            return getLinkage().set18K6CSelectCriteria(new SelectCriteria(0));
+//            selectCriteria.status = 0;
 
         }
 
         selectCriteria.length = epc.length * 8;
 
-        selectCriteria.offset = 0;
+        selectCriteria.offset = 32;
 
         System.arraycopy(epc, 0, selectCriteria.maskData, 0, epc.length);
 
-        if (type == 1) {
-
+        if (type == 0) {
             selectCriteria.bank = bank;
-
+            selectCriteria.selectorIdx = 0;
+            //
             selectCriteria.offset = 32;
-
+            //会话
+            selectCriteria.session = 4;
+            selectCriteria.jq = 0;
+            selectCriteria.action = 0;
             return getLinkage().set18K6CSelectCriteria(selectCriteria);
-
         } else {
-
             return getLinkage().Radio_SetPostMatchCriteria(selectCriteria);
-
         }
 
 

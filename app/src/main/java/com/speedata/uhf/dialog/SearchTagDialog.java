@@ -55,7 +55,7 @@ public class SearchTagDialog extends Dialog implements
     private SoundPool soundPool;
     private int soundId;
     private long scant = 0;
-    private CheckBox cbb;
+    private CheckBox cbb, yanma;
     private IUHFService iuhfService;
     private String model;
     private Button export;
@@ -68,6 +68,8 @@ public class SearchTagDialog extends Dialog implements
         this.iuhfService = iuhfService;
         this.model = model;
     }
+
+    boolean isYanma = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,6 +84,8 @@ public class SearchTagDialog extends Dialog implements
         export = (Button) findViewById(R.id.btn_export);
         export.setOnClickListener(this);
         cbb = (CheckBox) findViewById(R.id.checkBox_beep);
+        yanma = (CheckBox) findViewById(R.id.checkBox_yanma);
+
 
         Status = (TextView) findViewById(R.id.textView_search_status);
         EpcList = (ListView) findViewById(R.id.listView_search_epclist);
@@ -196,10 +200,14 @@ public class SearchTagDialog extends Dialog implements
                 inSearch = true;
                 this.setCancelable(false);
                 scant = 0;
+                EventBus.getDefault().post(new MsgEvent("CancelSelectCard", ""));
+                if (isYanma) {
+                    iuhfService.inventoryStart(1);
+                } else {
+                    iuhfService.inventoryStart(0);
+                }
                 //取消掩码
 //                iuhfService.selectCard(1, "", false);
-                EventBus.getDefault().post(new MsgEvent("CancelSelectCard", ""));
-                iuhfService.inventoryStart();
                 Action.setText(R.string.Stop_Search_Btn);
                 Cancle.setEnabled(false);
                 export.setEnabled(false);
@@ -297,18 +305,39 @@ public class SearchTagDialog extends Dialog implements
         if (inSearch) {
             return;
         }
-
         String epcStr = firm.get(arg2).epc;
         boolean u8 = SharedXmlUtil.getInstance(cont).read("U8", false);
         if (u8) {
             epcStr = epcStr.substring(0, 24);
         }
-        int res = iuhfService.selectCard(1, epcStr, true);
-        if (res == 0) {
-            EventBus.getDefault().post(new MsgEvent("set_current_tag_epc", epcStr));
+
+//
+        if (yanma.isChecked()) {
+            isYanma = true;
+            int setQueryTagGroup = iuhfService.setQueryTagGroup(2, 0, 0);
+            int res = iuhfService.selectCard(1, epcStr, true);
+            if (res == 0) {
+                EventBus.getDefault().post(new MsgEvent("set_current_tag_epc", epcStr));
 //            dismiss();
+            } else {
+                Status.setText(R.string.Status_Select_Card_Faild);
+            }
         } else {
-            Status.setText(R.string.Status_Select_Card_Faild);
+            isYanma = false;
+            //默认
+            int setQueryTagGroup = iuhfService.setQueryTagGroup(0, 2, 0);
+            if (setQueryTagGroup == 0) {
+//            status.setText("Set success");
+            } else {
+//            status.setText("Set failed:" + setQueryTagGroup);
+            }
+            int res = iuhfService.selectCard(1, epcStr, false);
+            if (res == 0) {
+                EventBus.getDefault().post(new MsgEvent("set_current_tag_epc", epcStr));
+//            dismiss();
+            } else {
+                Status.setText(R.string.Status_Select_Card_Faild);
+            }
         }
     }
 }

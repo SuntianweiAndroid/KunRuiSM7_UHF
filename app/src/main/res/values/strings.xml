@@ -86,6 +86,7 @@
     <string name="view_rt">rest time</string>
     <string name="btn_bk">back</string>
     <string name="cb_beep">beep new</string>
+    <string name="checkbox_beep">是否掩码</string>
     <string name="text_null"></string>
     <string name="antenna_p">antenna power</string>
     <string name="spt">speed\ntest</string>
